@@ -1,18 +1,32 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
 struct Alumno {
     char key[20];
     char ciclo[10];
+    char left[10];
+    char right[10];
 };
 
+void readFromConsole(char buffer[], int size) {
+    string temp;
+    cin >> temp;
+    for (int i = 0; i < size; i++)
+        buffer[i] = (i < temp.size()) ? temp[i] : ' ';
+    buffer[size - 1] = '\0';
+    cin.clear();
+}
+
 ostream &operator<<(ostream &stream, Alumno &p) {
-    stream << p.key << " ";
-    stream << p.ciclo;
-    stream << "\n";
+    stream << p.key  << " ";
+    stream << p.ciclo << " ";
+    stream <<p.left << " ";
+    stream << p.right << " ";
     stream << flush;
     return stream;
 }
@@ -22,6 +36,10 @@ istream &operator>>(istream &stream, Alumno &p) {
     p.key[19] = '\0';
     stream.read(p.ciclo, 10);
     p.ciclo[9] = '\0';
+    stream.read(p.left, 10);
+    p.left[9] = '\0';
+    stream.read(p.right, 10);
+    p.right[9] = '\0';
     stream.get();
     return stream;
 }
@@ -58,20 +76,18 @@ class AVLFile {
     }
 
     void _insert(RecordType &record, int nodePos, int parentPos, bool left) {
+
         ifstream file(filename);
         if (nodePos == -1 || file.peek() == std::ifstream::traits_type::eof()) {
             file.close();
             // element not found (insert)
             ofstream out(filename, ios::app | ios::ate);
-            // save position
-            size_t physicalRecordPos = out.tellp();
-            ofstream headerOut(headerFilename, ios::app);
-            headerOut << physicalRecordPos << "\n";
-            size_t lastInsertedPos = headerOut.tellp();
-            cout << headerOut.tellp() << " " << sizeof(size_t) << endl;
-            headerOut.close();
-            // write record at the end of file
-            out << record;
+            string tmp = string(9, ' ');
+            tmp[0] = '-';
+            tmp[1] = '1';
+            strcpy(record.left, tmp.c_str());
+            strcpy(record.right, tmp.c_str());
+            out << record << "\n";
             out.close();
             // look for parent (if exists)
             if (parentPos != -1) {
@@ -80,15 +96,17 @@ class AVLFile {
                 RecordType parent;
                 f >> parent;
                 // update parent node
+                tmp = to_string(fileSize() - 1);
                 if (left) {
-                    parent.left = lastInsertedPos - 2;
+                    strcpy(parent.left, tmp.c_str());
                 } else {
-                    parent.right = lastInsertedPos - 2;
+                    strcpy(parent.right, tmp.c_str());
                 }
                 f.seekp(_physicalPosition(parentPos));
                 f << parent;
                 f.close();
             }
+            fileSize();
             return;
         }
         size_t realPos = _physicalPosition(nodePos);
@@ -97,20 +115,23 @@ class AVLFile {
         file >> node;
         file.close();
         // note that we're inserting equal elements to the left of the node to which the key is equal
-        if (node.key >= record.key) {
-            return _insert(record, node.left, nodePos, true);
-        } else if (node.key < record.key) {
-            return _insert(record, node.right, nodePos, false);
+        if (string(node.key) >= string(record.key)) {
+            return _insert(record, stoi(node.left), nodePos, true);
+        } else if (string(node.key) < string(record.key)) {
+            return _insert(record, stoi(node.right), nodePos, false);
         }
     }
 
     size_t _physicalPosition(size_t logicalPosition) {
-        ifstream headerFile(headerFilename);
-        headerFile.seekg(sizeof(size_t) * logicalPosition);
-        size_t physicalPos;
-        headerFile >> physicalPos;
-        headerFile.close();
-        return physicalPos;
+        return logicalPosition * sizeof(Alumno);
+    }
+
+    size_t fileSize() {
+        ifstream infile(filename);
+        infile.seekg(0, ios::end);
+        cout << (int)infile.tellg() - 1 << endl;
+        cout << sizeof(Alumno) << endl;
+        return infile.tellg() / sizeof(Alumno);
     }
 
 public:
@@ -164,9 +185,9 @@ void menu() {
         } else if (op == 'a') {
             Alumno alumno;
             cout << "Nombre: ";
-            cin >> alumno.key;
+            readFromConsole(alumno.key, 20);
             cout << "Ciclo: ";
-            cin >> alumno.ciclo;
+            readFromConsole(alumno.ciclo, 10);
             avlFile.add(alumno);
         } else if (op == 'e') {
             exit = true;
