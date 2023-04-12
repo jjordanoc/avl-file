@@ -3,7 +3,8 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
-
+#include <iomanip>
+#include <sstream>
 using namespace std;
 
 struct Alumno {
@@ -92,11 +93,16 @@ class AVLFile {
             // look for parent (if exists)
             if (parentPos != -1) {
                 fstream f(filename);
-                f.seekg(_physicalPosition(parentPos));
+                f.seekg(_physicalPosition(parentPos)); //+ 2*(parentPos) xd
+                cout << "Pos:" << f.tellg() << endl;
                 RecordType parent;
                 f >> parent;
                 // update parent node
                 tmp = to_string(fileSize() - 1);
+                ostringstream ss;
+                ss << std::left << setfill(' ') << setw(9);
+                ss << tmp;
+                tmp = ss.str();
                 if (left) {
                     strcpy(parent.left, tmp.c_str());
                 } else {
@@ -137,11 +143,8 @@ class AVLFile {
 public:
     AVLFile(const string &_filename) : filename(_filename) {
         // ensure file is created
-        headerFilename = filename + "_header.txt";
         ofstream file(filename, ios::app);
         file.close();
-        ofstream headerFile(headerFilename, ios::app);
-        headerFile.close();
     }
 
     bool add(RecordType &record) {
