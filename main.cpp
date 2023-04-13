@@ -53,11 +53,11 @@ class AVLFile {
     string headerFilename;
 
 //    KeyExtractionFunction getKey;
-//    NodeExtractionFunction getNode;
-    int _search(KeyType key, int nodePos) {
+//    NodeExtractionFunction getNode
+    void _search(KeyType key, int nodePos, vector<RecordType> &result, bool flag) {
         if (nodePos == -1) {
             // element not found
-            return -1;
+            return;
         }
         ifstream file(filename);
         size_t realPos = _physicalPosition(nodePos);
@@ -65,13 +65,19 @@ class AVLFile {
         RecordType node;
         file >> node;
         file.close();
-        if (node.key > key) {
-            return _search(key, node.left);
-        } else if (node.key < key) {
-            return _search(key, node.right);
+        if (string(node.key) > string(key)) {
+            _search(key, stoi(node.left), result, flag);
+        } else if (string(node.key) < string(key)) {
+            _search(key, stoi(node.right), result, flag);
         } else {
             // element was found
-            return realPos;
+            result.push_back(node);
+//            if (!flag) {
+//                _search(key, stoi(node.left), result, true);
+//            }
+//            else {
+//                _search(key, stoi(node.right), result, false);
+//            }
         }
     }
 
@@ -147,7 +153,9 @@ public:
     }
 
     vector<RecordType> search(KeyType key) {
-
+        vector<RecordType> result;
+        _search(key, 0, result, false);
+        return result;
     }
 
 };
@@ -157,7 +165,7 @@ void menu() {
     bool exit = false;
     while (!exit) {
         cout << "load(l)\n";
-        cout << "read(r)\n";
+        cout << "search(s)\n";
         cout << "add(a)\n";
         cout << "exit(e)\n";
         char op;
@@ -169,17 +177,14 @@ void menu() {
 //                cout << "Nombre:" << tmp.key << endl;
 //                cout << "Ciclo:" << tmp.ciclo << endl;
 //            }
-        } else if (op == 'r') {
-//            int pos;
-//            cout << "pos: ";
-//            cin >> pos;
-//            Alumno alumno = avlFile.readRecord(pos);
-//            if (read) {
-//                cout << "Codigo:" << alumno.codigo << endl;
-//                cout << "Nombre:" << alumno.nombre << endl;
-//                cout << "Apellidos:" << alumno.apellidos << endl;
-//                cout << "Carrera:" << alumno.carrera << endl;
-//            }
+        } else if (op == 's') {
+            char key[20];
+            cout << "Nombre: ";
+            readFromConsole(key, 20);
+            auto alumnos = avlFile.search(key);
+            for (const auto &a : alumnos) {
+                cout << a.key << "|" << a.ciclo << "|" << a.left << "|" << a.right << endl;
+            }
         } else if (op == 'a') {
             Alumno alumno;
             cout << "Nombre: ";
