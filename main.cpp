@@ -5,6 +5,7 @@
 #include <string.h>
 #include <iomanip>
 #include <sstream>
+
 using namespace std;
 
 struct Alumno {
@@ -25,9 +26,9 @@ void readFromConsole(char buffer[], int size) {
 }
 
 ostream &operator<<(ostream &stream, Alumno &p) {
-    stream << p.key  << " ";
+    stream << p.key << " ";
     stream << p.ciclo << " ";
-    stream <<p.left << " ";
+    stream << p.left << " ";
     stream << p.right << " ";
     stream << p.next << " ";
     stream << flush;
@@ -76,12 +77,12 @@ class AVLFile {
         } else {
             // element was found
             result.push_back(node);
-//            if (!flag) {
-//                _search(key, stoi(node.left), result, true);
-//            }
-//            else {
-//                _search(key, stoi(node.right), result, false);
-//            }
+            while (stoi(node.next) != -1) {
+                ifstream in(filename);
+                in.seekg(_physicalPosition(stoi(node.next)));
+                in >> node;
+                result.push_back(node);
+            }
         }
     }
 
@@ -132,10 +133,9 @@ class AVLFile {
             return _insert(record, stoi(node.left), nodePos, true);
         } else if (string(node.key) < string(record.key)) {
             return _insert(record, stoi(node.right), nodePos, false);
-        }
-        else {
+        } else {
             // element not found (insert)
-            fstream out(filename,ios::ate | ios::out | ios::in);
+            fstream out(filename, ios::ate | ios::out | ios::in);
             cout << out.tellp() << endl;
             string tmp = string(9, ' ');
             tmp[0] = '-';
@@ -210,8 +210,8 @@ void menu() {
             cout << "Nombre: ";
             readFromConsole(key, 20);
             auto alumnos = avlFile.search(key);
-            for (const auto &a : alumnos) {
-                cout << a.key << "|" << a.ciclo << "|" << a.left << "|" << a.right << endl;
+            for (const auto &a: alumnos) {
+                cout << a.key << "|" << a.ciclo << "|" << a.left << "|" << a.right << "|" << a.next << endl;
             }
         } else if (op == 'a') {
             Alumno alumno;
