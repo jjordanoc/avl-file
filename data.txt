@@ -1,3 +1,1 @@
-Joaquin             5         1         2         
-Ana                 1         -1        -1        
-Zack                8         -1        -1        
+Joaquin             1         1         2         Ana                 2         -1        -1        Zack                3         3         -1        Ximena              4         -1        -1        

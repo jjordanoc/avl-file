@@ -41,7 +41,6 @@ istream &operator>>(istream &stream, Alumno &p) {
     p.left[9] = '\0';
     stream.read(p.right, 10);
     p.right[9] = '\0';
-    stream.get();
     return stream;
 }
 
@@ -88,13 +87,12 @@ class AVLFile {
             tmp[1] = '1';
             strcpy(record.left, tmp.c_str());
             strcpy(record.right, tmp.c_str());
-            out << record << "\n";
+            out << record;
             out.close();
             // look for parent (if exists)
             if (parentPos != -1) {
                 fstream f(filename);
-                f.seekg(_physicalPosition(parentPos)); //+ 2*(parentPos) xd
-                cout << "Pos:" << f.tellg() << endl;
+                f.seekg(_physicalPosition(parentPos));
                 RecordType parent;
                 f >> parent;
                 // update parent node
@@ -112,7 +110,6 @@ class AVLFile {
                 f << parent;
                 f.close();
             }
-            fileSize();
             return;
         }
         size_t realPos = _physicalPosition(nodePos);
@@ -135,8 +132,6 @@ class AVLFile {
     size_t fileSize() {
         ifstream infile(filename);
         infile.seekg(0, ios::end);
-        cout << (int)infile.tellg() - 1 << endl;
-        cout << sizeof(Alumno) << endl;
         return infile.tellg() / sizeof(Alumno);
     }
 
