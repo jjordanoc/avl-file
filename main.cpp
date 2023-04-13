@@ -12,6 +12,7 @@ struct Alumno {
     char ciclo[10];
     char left[10];
     char right[10];
+    char next[10];
 };
 
 void readFromConsole(char buffer[], int size) {
@@ -28,6 +29,7 @@ ostream &operator<<(ostream &stream, Alumno &p) {
     stream << p.ciclo << " ";
     stream <<p.left << " ";
     stream << p.right << " ";
+    stream << p.next << " ";
     stream << flush;
     return stream;
 }
@@ -41,6 +43,8 @@ istream &operator>>(istream &stream, Alumno &p) {
     p.left[9] = '\0';
     stream.read(p.right, 10);
     p.right[9] = '\0';
+    stream.read(p.next, 10);
+    p.next[9] = '\0';
     return stream;
 }
 
@@ -82,7 +86,6 @@ class AVLFile {
     }
 
     void _insert(RecordType &record, int nodePos, int parentPos, bool left) {
-
         ifstream file(filename);
         if (nodePos == -1 || file.peek() == std::ifstream::traits_type::eof()) {
             file.close();
@@ -93,6 +96,7 @@ class AVLFile {
             tmp[1] = '1';
             strcpy(record.left, tmp.c_str());
             strcpy(record.right, tmp.c_str());
+            strcpy(record.next, tmp.c_str());
             out << record;
             out.close();
             // look for parent (if exists)
@@ -124,10 +128,34 @@ class AVLFile {
         file >> node;
         file.close();
         // note that we're inserting equal elements to the left of the node to which the key is equal
-        if (string(node.key) >= string(record.key)) {
+        if (string(node.key) > string(record.key)) {
             return _insert(record, stoi(node.left), nodePos, true);
         } else if (string(node.key) < string(record.key)) {
             return _insert(record, stoi(node.right), nodePos, false);
+        }
+        else {
+            // element not found (insert)
+            fstream out(filename,ios::ate | ios::out | ios::in);
+            cout << out.tellp() << endl;
+            string tmp = string(9, ' ');
+            tmp[0] = '-';
+            tmp[1] = '1';
+            strcpy(record.left, tmp.c_str());
+            strcpy(record.right, tmp.c_str());
+            strcpy(record.next, node.next);
+            cout << out.tellp() << endl;
+            out << record;
+            cout << out.tellp() << endl;
+            tmp = to_string(fileSize() - 1);
+            ostringstream ss;
+            ss << std::left << setfill(' ') << setw(9);
+            ss << tmp;
+            tmp = ss.str();
+            out.seekp(_physicalPosition(nodePos));
+            strcpy(node.next, tmp.c_str());
+            out << node;
+            out.close();
+            return;
         }
     }
 
